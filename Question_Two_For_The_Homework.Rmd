@@ -5,7 +5,7 @@ date: "2024-12-02"
 ---
 ```{r}
 
-#First for this homework I installed and loaded the packages required, the installation was done in the console for cleaner code. 
+#First for this homework I installed and loaded the packages required. 
 library(tidyverse)
 library(palmerpenguins)
 library(janitor)
@@ -14,8 +14,9 @@ library(ggplot2)
 library(tinytex)
 library(lmtest)
 library(renv)
-renv::init()
-renv:: snapshot()
+#renv::init()
+#renv:: snapshot()
+#renv::restore ()
 ```
 # Question 2
 
@@ -30,7 +31,7 @@ head(penguins_raw) #This is my raw data set.
 #The first step in my analysis is cleaning the data. 
 penguins_original <- penguins_raw
 colnames(penguins_raw) #these column names need cleaning. 
-write.csv (penguins_raw, here("data","penguins_raw.csv")) #This saves the data to a data folder in the same project as this Rmd file. 
+write.csv (penguins_raw, here("Data","penguins_raw.csv")) #This saves the data to a data folder in the same project as this Rmd file. 
 #The piping below removes the comments and Delta columns, cleans the data, removing capitals, full stops, brackets, removing N/A readings and renaming the species columns. 
 penguins_clean <- penguins_raw %>% 
               select(-Comments) %>% 
@@ -40,7 +41,7 @@ penguins_clean <- penguins_raw %>%
               mutate(species = case_when( species == "Adelie Penguin (Pygoscelis adeliae)" ~ "Adelie",
                               species == "Chinstrap penguin (Pygoscelis antarctica)" ~ "Chinstrap",
                               species == "Gentoo penguin (Pygoscelis papua)" ~ "Gentoo"))
-write.csv (penguins_clean, here("data","penguins_raw.csv"))
+write.csv (penguins_clean, here("Data","penguins_clean.csv"))
 
 ```
 Now I will make an exploratory figure with my clean data.
@@ -49,7 +50,7 @@ Now I will make an exploratory figure with my clean data.
 Fig.1 <- ggplot(data = penguins_clean, aes(group = species,x = body_mass_g, y = flipper_length_mm, color = species)) + geom_line() + theme_bw() + labs(x = 'Body Mass (g)', y = 'Flipper Length (mm)', title ='Does body mass correlate with flipper length?') + geom_jitter(position = position_jitter(0.5), color = "black", size = 0.5, alpha = 0.9, pch = 21) + geom_smooth(method=lm)
 Fig.1
 #the code below saved the figure to my project file for this project, as a png. 
-png(filename="C:/Homework For Penguin data/Figures/Flipper_and_body_mass.png")
+png(filename="C:/Question_Two_For_Penguin_Homework/Figures/Flipper_and_body_mass.png")
 plot(Fig.1)
 dev.off()
 
@@ -78,7 +79,7 @@ Having established that the assumptions of the ANOVA test are met, we can run an
 #| echo: true
 Table.1 <- anova(effect.of.body.mass.on.flipper.length)
 Table.1
-png(filename="C:/Homework For Penguin data/Figures/ANOVA_for_Flipper_and_body_mass.png")
+png(filename="C:/Question_Two_For_Penguin_Homework/Figures/ANOVA_for_Flipper_and_body_mass.png")
 plot(Table.1)
 dev.off()
 
