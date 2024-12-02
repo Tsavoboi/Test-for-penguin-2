@@ -1,0 +1,102 @@
+---
+title: "Question_2_for_the_homework."
+output: html_document
+date: "2024-12-02"
+---
+```{r}
+
+#First for this homework I installed and loaded the packages required, the installation was done in the console for cleaner code. 
+library(tidyverse)
+library(palmerpenguins)
+library(janitor)
+library(here)
+library(ggplot2)
+library(tinytex)
+library(lmtest)
+library(renv)
+renv::init()
+renv:: snapshot()
+```
+# Question 2
+
+### Introduction 
+
+This question requires me to load, clean, graphically explore, and then statistically test the data in the palmers penguin data set. The first part of this is loading the data, which is shown below. The hypothesis I am exploring is whether Body mass and flipper length are correlated.
+
+```{r}
+#I need for this assignment to load ggplot2, tidyverse, palmers penguins and janitor. These are loaded in the begining of this project, so I haven't reloaded them here. 
+#The data I am exploring is in the palmers penguins package.
+head(penguins_raw) #This is my raw data set. 
+#The first step in my analysis is cleaning the data. 
+penguins_original <- penguins_raw
+colnames(penguins_raw) #these column names need cleaning. 
+write.csv (penguins_raw, here("data","penguins_raw.csv")) #This saves the data to a data folder in the same project as this Rmd file. 
+#The piping below removes the comments and Delta columns, cleans the data, removing capitals, full stops, brackets, removing N/A readings and renaming the species columns. 
+penguins_clean <- penguins_raw %>% 
+              select(-Comments) %>% 
+              select(-starts_with("Delta")) %>% 
+              clean_names() %>% 
+              na.omit() %>% 
+              mutate(species = case_when( species == "Adelie Penguin (Pygoscelis adeliae)" ~ "Adelie",
+                              species == "Chinstrap penguin (Pygoscelis antarctica)" ~ "Chinstrap",
+                              species == "Gentoo penguin (Pygoscelis papua)" ~ "Gentoo"))
+write.csv (penguins_clean, here("data","penguins_raw.csv"))
+
+```
+Now I will make an exploratory figure with my clean data.
+
+```{r}
+Fig.1 <- ggplot(data = penguins_clean, aes(group = species,x = body_mass_g, y = flipper_length_mm, color = species)) + geom_line() + theme_bw() + labs(x = 'Body Mass (g)', y = 'Flipper Length (mm)', title ='Does body mass correlate with flipper length?') + geom_jitter(position = position_jitter(0.5), color = "black", size = 0.5, alpha = 0.9, pch = 21) + geom_smooth(method=lm)
+Fig.1
+#the code below saved the figure to my project file for this project, as a png. 
+png(filename="C:/Homework For Penguin data/Figures/Flipper_and_body_mass.png")
+plot(Fig.1)
+dev.off()
+
+
+```
+
+### Statistical Methods. 
+
+And then I will run a statistical test on this work to prove there is a correlation between flipper length and body mass, and that body mass explains the variation within flipper length across the three penguin species. I am going to use the lmtest package for this.
+
+```{r}
+#First I must fit a linear model of Flipper and Body mass. 
+effect.of.body.mass.on.flipper.length <- lm(flipper_length_mm ~ body_mass_g, data = penguins_clean)
+summary(effect.of.body.mass.on.flipper.length)
+par(mfrow=c(2,2))
+#The plot below shows the linear model residual plots and QQ plots, and shows that the ANOVA assumptions are met.
+Fig.2 <- plot(effect.of.body.mass.on.flipper.length)
+Fig.2
+```
+
+Fig. 2 shows that there is low hetroskedascity, as the lines are flat on both the residuals vs fitted values chart (top left), and in the standardised residual plots (bottom left). The Q-Q plot also demonstrates that the data is approximately normal, as the points fall close to the diagonal line. This suggests that the linear model is a good fit, and that the model explains a large proportion of the variation within flipper length.
+
+Having established that the assumptions of the ANOVA test are met, we can run an ANOVA using the lmtest(package).
+
+```{r}
+#| echo: true
+Table.1 <- anova(effect.of.body.mass.on.flipper.length)
+Table.1
+png(filename="C:/Homework For Penguin data/Figures/ANOVA_for_Flipper_and_body_mass.png")
+plot(Table.1)
+dev.off()
+
+```
+As Table.1 demonstrates there is a strong correlation between body mass and flipper length, with a statistically significant correlation between body mass and flipper length (p= 2.2x10\^-16, ANOVA). However, this is a correlation accross three different species, so it is important to check if species has an effect, and that the species and body mass effect do not interact strongly. For this we need an ANCOVA, which is shown below. 
+
+
+```{r}
+#What about an ANCOVA.
+effect.of.body.mass.and.species<- lm(flipper_length_mm ~ body_mass_g*species, data = penguins_clean)
+#summary(effect.of.body.mass.and.species). (I used this to check the summary of the linear model, but for the sake of the assignment I am not including it as working code.)
+Table.2 <- anova(effect.of.body.mass.and.species)
+Table.2
+```
+As table two shows, there is a very weak interaction between species and body mass on flipper length, however, species has a very strong effect on flipper length, and body mass has a very strong effect on flipper length.  
+
+### Results and Discussion. 
+This analysis of the palmers penguin dataset shows that there is a significant correlation between body mass and flipper length (p=2x10^-16, ANOVA) shown in Table.1, and that there is also a significant correlation between species and flipper length (p=2x10^-16, ANOVA), shown in Table.2. 
+
+### Conclusion. 
+
